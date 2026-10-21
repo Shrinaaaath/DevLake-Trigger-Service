@@ -66,28 +66,20 @@ This project is a working prototype / proof of concept with live runtime wiring 
 flowchart LR
     GH[GitHub Repository Event]
     API[FastAPI /webhook]
-    SIG[GitHub Signature Verification
-    X-Hub-Signature-256]
+    SIG[GitHub Signature Verification<br/>X-Hub-Signature-256]
     KP[Kafka Producer]
     TOPIC[(devlake-repository-events)]
     KC[Kafka Consumer]
-    DED[Deduplicator
-    window = 30s]
-    LOCK[Blueprint Lock Manager
-    skip / queue]
-    RES[Blueprint Resolver
-    repo -> blueprint IDs]
-    DEV[DevLake Client
-    GET /blueprints
-    POST /blueprints/{id}/trigger]
-    DL[Apache DevLake
-    pipeline execution]
+    DED[Deduplicator<br/>window = 30s]
+    LOCK[Blueprint Lock Manager<br/>skip / queue]
+    RES[Blueprint Resolver<br/>repo -> blueprint IDs]
+    DEV[DevLake Client<br/>GET /blueprints<br/>POST /blueprints/:id/trigger]
+    DL[Apache DevLake<br/>pipeline execution]
     DB[(MySQL / DevLake Backend)]
 
     GH --> API --> SIG --> KP --> TOPIC --> KC --> DED --> LOCK --> RES --> DEV --> DL --> DB
 
-    SYNC[Startup sync
-    GET /blueprints] -. populates cache .-> RES
+    SYNC[Startup sync<br/>GET /blueprints] -. populates cache .-> RES
 ```
 
 This is the most accurate abstraction of the system as it exists today.
