@@ -62,6 +62,7 @@ This project is a working prototype / proof of concept with live runtime wiring 
 
 ## 3. Architecture summary
 
+```mermaid
 flowchart LR
     GH[GitHub Repository Event]
     API[FastAPI /webhook]
