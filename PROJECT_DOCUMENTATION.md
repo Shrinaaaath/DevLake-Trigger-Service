@@ -62,9 +62,6 @@ This project is a working prototype / proof of concept with live runtime wiring 
 
 ## 3. Architecture summary
 
-The actual runtime architecture implemented in the code is:
-
-```mermaid
 flowchart LR
     GH[GitHub Repository Event]
     API[FastAPI /webhook]
