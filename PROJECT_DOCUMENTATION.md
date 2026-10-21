@@ -1027,25 +1027,25 @@ Current status:
 
 PARTIALLY IMPLEMENTED.
 
-### O. PostgreSQL
+### O. MySQL
 
 Purpose:
 
-The project’s architecture assumes PostgreSQL is the data store used by DevLake and the analytics stack.
+The project’s architecture assumes MySQL is the data store used by the DevLake backend.
 
 Why it exists:
 
-DevLake typically stores its standardized engineering data here.
+DevLake uses MySQL as its persistence layer for the runtime metadata and collection state.
 
 Current status:
 
-Not directly implemented in this repository. The trigger service does not connect to PostgreSQL or write to it. The code does not contain a PostgreSQL client or DB config. PostgreSQL is therefore part of the DevLake ecosystem, but not a direct component of this trigger service implementation.
+Not directly implemented in this repository. The trigger service does not connect to MySQL or write to it. The code does not contain a MySQL client or DB config. MySQL is therefore part of the DevLake ecosystem, but not a direct component of this trigger service implementation.
 
 ### P. Grafana
 
 Purpose:
 
-Visualization UI for data from the DevLake/PostgreSQL layer.
+Visualization UI for data from the DevLake/MySQL layer.
 
 Why it exists:
 
@@ -1095,8 +1095,8 @@ The following is the real flow as implemented in the code.
 18. For each blueprint ID, `BlueprintExecutionCommand` calls `DevLakeClient.trigger_blueprint(blueprint_id)`.
 19. The DevLake client POSTs to `/blueprints/{id}/trigger` with `{"fullSync": false, "skipCollectors": false}`.
 20. If DevLake accepts the request, the pipeline is triggered.
-21. DevLake performs the actual data collection against GitHub and stores results in whatever storage it uses.
-22. The trigger service itself does not write to PostgreSQL or Grafana directly.
+21. DevLake performs the actual data collection against GitHub and stores results in its configured backend, which in this environment is MySQL.
+22. The trigger service itself does not write to MySQL or Grafana directly.
 
 ### What actually happens at each step
 
@@ -1622,7 +1622,7 @@ DevLake:
 
 - is the collection engine that actually performs GitHub data collection
 - stores and processes data in its own stack
-- likely uses PostgreSQL beneath it
+- uses MySQL beneath it in this environment
 - is not reimplemented here
 
 ## 13. Blueprint Resolution
@@ -1774,15 +1774,15 @@ Background synchronization:
 
 This combination is used to keep the mapping current while still enabling event-driven triggering.
 
-## 15. Database / PostgreSQL
+## 15. Database / MySQL
 
-### How PostgreSQL fits into the architecture
+### How MySQL fits into the architecture
 
-The repository does not contain PostgreSQL code or configuration. It assumes PostgreSQL is part of the broader DevLake ecosystem where standardized engineering data is stored.
+The repository does not contain MySQL code or configuration. It assumes MySQL is part of the broader DevLake ecosystem where standardized engineering data is stored.
 
 ### Which component owns the database
 
-DevLake owns the data store relationship in the architectural narrative. The trigger service does not own or connect to PostgreSQL directly.
+DevLake owns the data store relationship in the architectural narrative. The trigger service does not own or connect to MySQL directly.
 
 ### What DevLake stores
 
@@ -1797,7 +1797,7 @@ The trigger service extracts repository names and resolves blueprint IDs, but it
 The docs and language imply the flow:
 
 - DevLake collects GitHub data
-- stores it in PostgreSQL
+- stores it in MySQL
 - Grafana reads the data source
 
 This is part of the platform architecture, but it is not directly implemented within this repo.
@@ -1808,13 +1808,13 @@ Not identifiable from the repository. No SQL schema or DB client code is include
 
 ### Database connection configuration
 
-No PostgreSQL connection string or database client config exists in this project’s Python modules.
+No MySQL connection string or database client config exists in this project’s Python modules.
 
 ## 16. Grafana
 
 ### Role of Grafana
 
-Grafana is a visualization layer for engineering metrics derived from the data stored by DevLake/PostgreSQL.
+Grafana is a visualization layer for engineering metrics derived from the data stored by DevLake/MySQL.
 
 ### Data source
 
@@ -1824,11 +1824,11 @@ Not defined in this repository. The project does not include Grafana config, dat
 
 The project expects metrics of standardized engineering data, but actual dashboards are not provided here.
 
-### Relationship to PostgreSQL/DevLake
+### Relationship to MySQL/DevLake
 
 The implied architecture is:
 
-GitHub events -> DevLake -> PostgreSQL -> Grafana
+GitHub events -> DevLake -> MySQL -> Grafana
 
 ### Whether dashboards are provisioned automatically
 
@@ -1893,7 +1893,7 @@ services:
 ### Components not configured in this repo
 
 - DevLake container
-- PostgreSQL container
+- MySQL container
 - Grafana container
 - ngrok
 
@@ -1927,20 +1927,20 @@ flowchart LR
     K[Kafka container]
     UI[Kafka UI container]
     Dev[DevLake external service]
-    PG[(PostgreSQL external database)]
+    DB[(MySQL external database)]
     G[Grafana external service]
 
     Host --> App
     App -->|publishes repo events| K
     UI -->|observes| K
     App -->|triggers blueprints| Dev
-    Dev --> PG
-    PG --> G
+    Dev --> DB
+    DB --> G
 ```
 
 ### Important caveat
 
-The deployment layout in the repo is local and partial. It is not a complete environment for DevLake/PostgreSQL/Grafana.
+The deployment layout in the repo is local and partial. It is not a complete environment for DevLake/MySQL/Grafana.
 
 ## 19. Local Development Setup
 
@@ -2230,7 +2230,7 @@ Present in:
 - real DevLake connectivity
 - real webhook delivery from GitHub
 - production configuration or TLS/security behavior
-- real PostgreSQL/Grafana integration
+- real MySQL/Grafana integration
 
 ### How to run tests
 
@@ -2271,7 +2271,7 @@ This is the strongest evidence-based flow the repository supports.
 - GitHub actually sending a webhook to the running service
 - external DevLake running and returning blueprints
 - real DevLake blueprint pipeline execution
-- PostgreSQL data persistence
+- MySQL data persistence
 - Grafana metrics
 - ngrok tunnel to an exposed local webhook endpoint
 
@@ -2422,7 +2422,7 @@ Trade-off:
 
 The trigger service depends on DevLake being present and correctly configured.
 
-### PostgreSQL
+### MySQL
 
 Problem:
 
@@ -2430,11 +2430,11 @@ Need a durable and structured place to store analytics data.
 
 Decision:
 
-The architecture assumes DevLake uses PostgreSQL as its persistence layer.
+The architecture assumes DevLake uses MySQL as its persistence layer.
 
 Reason:
 
-PostgreSQL is a common and mature choice for structured engineering data.
+MySQL is the verified backend in this project environment and a mature choice for structured engineering data.
 
 Benefit:
 
@@ -2494,7 +2494,7 @@ This project does not eliminate rate limits. DevLake still makes the real GitHub
 
 ### Database scalability
 
-Not implemented directly in this repo. PostgreSQL and DevLake are assumed to live outside the trigger service code.
+Not implemented directly in this repo. MySQL and DevLake are assumed to live outside the trigger service code.
 
 ### Bottlenecks and single points of failure
 
@@ -2579,7 +2579,7 @@ This section is essential because the current repo is a prototype and not a comp
 - no TLS / SASL for Kafka
 - no durable retry / DLQ handling beyond a few retries
 - no actual production webhook endpoint exposure strategy
-- no PostgreSQL or Grafana implementation in this repo
+- no MySQL or Grafana implementation in this repo
 - no ngrok component in repo
 - limited GitHub payload schema (minimal repo object only)
 - test suite fails during collection due to file-name conflicts
@@ -2606,7 +2606,7 @@ These are not implemented as verified features.
 - proper auth and authorization layer
 - database-backed cache
 - Grafana provisioning and dashboards
-- full DevLake/PostgreSQL/Grafana deployment stack
+- full DevLake/MySQL/Grafana deployment stack
 - monitoring and metrics integration
 
 ## 31. Project File Structure
@@ -2789,13 +2789,13 @@ A DevLake collection definition or pipeline template. The app resolves repositor
 
 A unit of work within DevLake. Triggering a blueprint effectively triggers a DevLake collection pipeline.
 
-### PostgreSQL
+### MySQL
 
 The project assumes this is the storage layer behind DevLake. The trigger service itself does not connect to it directly.
 
 ### Grafana
 
-Visualization layer for the metrics and engineering data generated by the DevLake/PostgreSQL stack.
+Visualization layer for the metrics and engineering data generated by the DevLake/MySQL stack.
 
 ### Rate limiting
 
@@ -2853,11 +2853,11 @@ The trigger service does not collect GitHub data itself. It asks DevLake to run 
 
 ### 11. Where is the data stored?
 
-The repository itself does not connect to PostgreSQL. The intended architecture is that DevLake stores standardized engineering data in PostgreSQL, which can then be visualized through Grafana.
+The repository itself does not connect to MySQL. The intended architecture is that DevLake stores standardized engineering data in MySQL, which can then be visualized through Grafana.
 
 ### 12. How is it visualized?
 
-This repo does not include Grafana configuration or dashboards. The intended platform flow is DevLake -> PostgreSQL -> Grafana, but this repository only contains the trigger orchestration layer.
+This repo does not include Grafana configuration or dashboards. The intended platform flow is DevLake -> MySQL -> Grafana, but this repository only contains the trigger orchestration layer.
 
 ### 13. How does this address GitHub rate limiting?
 
@@ -2869,7 +2869,7 @@ The current implementation is a prototype: in-memory dedup and cache state, no p
 
 ### 15. What would be the next engineering improvements?
 
-Persistent state, durable deduplication, better retries/DLQ, rate-limit-aware selection, production webhook security, distributed Kafka scaling, and a complete DevLake/PostgreSQL/Grafana deployment are the main next steps.
+Persistent state, durable deduplication, better retries/DLQ, rate-limit-aware selection, production webhook security, distributed Kafka scaling, and a complete DevLake/MySQL/Grafana deployment are the main next steps.
 
 ## 35. Final Implementation Status
 
@@ -2885,7 +2885,7 @@ Persistent state, durable deduplication, better retries/DLQ, rate-limit-aware se
 | Dirty Repository Tracking | PARTIALLY IMPLEMENTED | in-memory deduplication logic; no explicit dirty repo manager class |
 | Blueprint Resolution | IMPLEMENTED | `app/services/devlake_synchronizer.py`, `app/infrastructure/static_blueprint_resolver.py` |
 | DevLake REST Integration | IMPLEMENTED | `app/infrastructure/devlake_client.py` |
-| PostgreSQL | NOT VERIFIED / NOT IMPLEMENTED IN THIS REPO | no DB client or config in project |
+| MySQL | VERIFIED AS DEVLAKE BACKEND IN THIS ENVIRONMENT | runtime backend used by DevLake; not implemented in this repo |
 | Grafana | NOT VERIFIED / NOT IMPLEMENTED IN THIS REPO | no Grafana config in repo |
 | Docker Deployment | PARTIALLY IMPLEMENTED | `docker-compose.yml` only includes Kafka and Kafka UI |
 | Tests | PARTIALLY IMPLEMENTED | suite exists, but current pytest collection fails due to name collisions |
@@ -2919,14 +2919,14 @@ Persistent state, durable deduplication, better retries/DLQ, rate-limit-aware se
 - persistent deduplication
 - production-grade authentication and network exposure
 - distributed Kafka scaling
-- full DevLake/PostgreSQL/Grafana deployment
+- full DevLake/MySQL/Grafana deployment
 - robust retry/DLQ and operational monitoring
 
 ### What could not be verified
 
 - ngrok configuration
 - actual live GitHub webhook integration against a public endpoint
-- DevLake/PostgreSQL/Grafana runtime stack in this repo
+- DevLake/MySQL/Grafana runtime stack in this repo
 - real-world production deployment or production-grade scaling behavior
 
 ### Most important architectural observations
@@ -2935,4 +2935,4 @@ Persistent state, durable deduplication, better retries/DLQ, rate-limit-aware se
 2. The main design intent is to reduce unnecessary collection triggers by moving away from repository polling.
 3. Kafka is used as a buffering and decoupling layer, not as an application-level deduplication engine.
 4. The code is a functional prototype with in-memory state and local infrastructure assumptions.
-5. The project is meaningful as a trigger service architecture, but it is not yet a complete end-to-end production deployment from GitHub to PostgreSQL/Grafana.
+5. The project is meaningful as a trigger service architecture, but it is not yet a complete end-to-end production deployment from GitHub to MySQL/Grafana.
