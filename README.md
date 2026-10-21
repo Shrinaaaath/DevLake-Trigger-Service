@@ -69,11 +69,9 @@ Detailed architecture, assumptions, runtime evidence, and handover notes are in:
 
 - [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md)
 
-## Repository
+## Database
 
-The project is also published to GitHub here:
-
-- https://github.com/Shrinaaaath/DevLake-Trigger-Service
+The DevLake backend uses MySQL.
 
 ## Notes
 
